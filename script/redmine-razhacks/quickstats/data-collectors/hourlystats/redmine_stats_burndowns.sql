@@ -7,7 +7,7 @@ set @qa_custom_field_id = 24;
 set @old_sprint_string = date_format(date_sub(current_date(), interval 2 month), "%Y.%m.%d");
 
 create table if not exists quickstats_story_snapshots (
-  snapshot_date datetime,
+  snapshot_date date,
   sprint varchar(20),
   sum_total int(4),
   sum_open int(4),
