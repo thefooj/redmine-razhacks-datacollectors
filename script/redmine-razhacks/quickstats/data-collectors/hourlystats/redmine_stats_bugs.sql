@@ -23,6 +23,7 @@ create table if not exists quickstats_bug_snapshots (
   count_priority_low_open int(4),
   count_priority_rainy_day_open int(4),
   count_priority_unprioritized_open int(4),
+  updated_at timestamp,
   KEY `idx_quickstats_bug_snapshots_snapshot_date` (`snapshot_date`),
   KEY `idx_quickstats_bug_snapshots_sprint` (`sprint`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -47,7 +48,8 @@ insert into quickstats_bug_snapshots (snapshot_date,
   count_priority_medium_open,
   count_priority_low_open,
   count_priority_rainy_day_open,
-  count_priority_unprioritized_open)
+  count_priority_unprioritized_open,
+  updated_at)
 select
   current_date() as snapshot_date,
   cv_sprint.value,
@@ -64,7 +66,8 @@ select
   sum(case when st.is_closed = 0 and en.name = 'Medium' then 1 else 0 end) as count_priority_medium_open,
   sum(case when st.is_closed = 0 and en.name = 'Low' then 1 else 0 end) as count_priority_low_open,
   sum(case when st.is_closed = 0 and en.name = 'Rainy Day' then 1 else 0 end) as count_priority_rainy_day_open,
-  sum(case when st.is_closed = 0 and en.name = 'Unprioritized' then 1 else 0 end) as count_priority_unprioritized_open
+  sum(case when st.is_closed = 0 and en.name = 'Unprioritized' then 1 else 0 end) as count_priority_unprioritized_open,
+  now()
 from 
   issues i 
   left join issue_statuses st on i.status_id = st.id

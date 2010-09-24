@@ -18,6 +18,7 @@ create table if not exists quickstats_story_snapshots (
   sum_pending_and_qa_failed int(4),
   sum_pending_and_qa_done int(4),
   sum_pending_and_qa_not_needed int(4),
+  updated_at timestamp,
   KEY `idx_quickstats_story_snapshots_snapshot_date` (`snapshot_date`),
   KEY `idx_quickstats_story_snapshots_sprint` (`sprint`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -27,8 +28,19 @@ delete from quickstats_story_snapshots where snapshot_date = current_date();
 
 
 -- trackers are 2:Story, 4:Systems, 5:TechDebt, 8:Research
-insert into quickstats_story_snapshots (snapshot_date, sprint, sum_total, sum_open, sum_pending, sum_complete, 
-  sum_pending_and_qa_needed, sum_pending_and_qa_succeeded, sum_pending_and_qa_failed, sum_pending_and_qa_done, sum_pending_and_qa_not_needed)
+insert into quickstats_story_snapshots (
+  snapshot_date, 
+  sprint, 
+  sum_total, 
+  sum_open, 
+  sum_pending, 
+  sum_complete, 
+  sum_pending_and_qa_needed, 
+  sum_pending_and_qa_succeeded, 
+  sum_pending_and_qa_failed, 
+  sum_pending_and_qa_done, 
+  sum_pending_and_qa_not_needed,
+  updated_at)
 select
   current_date() as snapshot_date,
   cv_sprint.value,
@@ -40,7 +52,8 @@ select
   sum(case when i.status_id in (3) and cv_qa.value in ('Succeeded') then convert(cv_spoints.value, unsigned integer) else 0 end) as sum_pending_and_qa_succeeded,
   sum(case when i.status_id in (3) and cv_qa.value in ('Failed') then convert(cv_spoints.value, unsigned integer) else 0 end) as sum_pending_and_qa_failed,
   sum(case when i.status_id in (3) and cv_qa.value in ('Succeeded', 'Failed') then convert(cv_spoints.value, unsigned integer) else 0 end) as sum_pending_and_qa_done,
-  sum(case when i.status_id in (3) and cv_qa.value in ('Not Needed') then convert(cv_spoints.value, unsigned integer) else 0 end) as sum_pending_and_qa_not_needed
+  sum(case when i.status_id in (3) and cv_qa.value in ('Not Needed') then convert(cv_spoints.value, unsigned integer) else 0 end) as sum_pending_and_qa_not_needed,
+  now()
 from 
   issues i 
   left join custom_values cv_sprint on i.id = cv_sprint.customized_id and 
