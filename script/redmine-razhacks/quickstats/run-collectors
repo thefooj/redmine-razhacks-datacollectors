@@ -1,0 +1,74 @@
+#!/usr/bin/env ruby
+
+######################################################################################################### 
+# Builds data collections from everything in the data-collectors/[bundle] directory
+#
+# Run as:
+#  RAILS_ENV=production ./script/redmine-razhacks/quickstats/run-collectors [bundle]
+#
+#########################################################################################################
+
+require File.dirname(__FILE__) + '/../../../config/boot'
+require 'erb'
+require 'yaml'
+
+def database_args(env)
+  
+  # set up db configs
+  unless dbconfig = YAML::load(ERB.new(IO.read(RAILS_ROOT + "/config/database.yml")).result)[env]
+    abort "No database is configured for the environment '#{env}'"
+  end
+
+  # load database config
+  case dbconfig["adapter"]
+  when "mysql"
+    db_args = {
+      'host'      => '--host',
+      'port'      => '--port',
+      'socket'    => '--socket',
+      'username'  => '--user',
+      'encoding'  => '--default-character-set'
+    }.map { |opt, arg| "#{arg}=#{dbconfig[opt]}" if dbconfig[opt] }.compact
+
+    if dbconfig['password'] 
+      db_args << "--password=#{dbconfig['password']}"
+    elsif dbconfig['password'] && !dbconfig['password'].to_s.empty?
+      db_args << "-p"
+    end
+
+    db_args << dbconfig['database']
+  else
+    abort "Sorry - we can only run these reports for mysql..."
+  end
+  
+  db_args
+end
+
+
+
+# script location - stuff gets stored below this
+run_dir = File.dirname(__FILE__)
+
+short_name = ARGV.first
+if short_name.nil?
+  report_sets = ""
+  Dir.glob("#{run_dir}/data-collectors/*").each do |dirname|
+    report_sets << "  #{File.basename(dirname)}\n"    
+  end
+  abort "Please specify the bundle to run as the first argument: \n#{report_sets}\n"
+end
+
+# set up working directories
+queries_dir   = "#{run_dir}/data-collectors/#{short_name}"
+[queries_dir].each { |dir| FileUtils.mkdir_p(dir) }
+
+env     = ENV['RAILS_ENV'] || 'development'
+db_args = database_args(env)
+
+#puts "globbing #{queries_dir}/*.sql"
+Dir.glob("#{queries_dir}/*.sql").each do |query_file|
+  report_name = File.basename(query_file, ".sql")
+  
+  Kernel.system("mysql #{db_args.join(' ')} < #{query_file} > /dev/null")
+end
+

@@ -1,0 +1,15 @@
+This is just a set of hack scripts that I've added to Redmine for our agile management @ Razoo.  
+
+I'm positive this will be of no use to anyone... other than:
+
+* Throwing mud, saying... "use Rails, you fool"
+* Maybe, possibly, learning some SQL tricks (that break all Rails conventions)
+
+To Install:
+
+* export this git repo, and copy the things under script/ to the script/ directory in Redmine
+
+Please don't get me wrong.  I like Rails a lot... Our engineering team @ Razoo is amazing... So, this is the dangerous stuff that happens when the CTO starts tinkering with data.  
+
+Anyway.. enjoy :)
+
